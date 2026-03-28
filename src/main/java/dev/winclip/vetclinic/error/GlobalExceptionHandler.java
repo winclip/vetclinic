@@ -7,17 +7,29 @@ import java.util.Map;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
 	private static final String UQ_EMAIL = "uq_doctors_email";
 	private static final String UQ_LICENSE = "uq_doctors_veterinary_license";
+
+	@ExceptionHandler(ResponseStatusException.class)
+	public ResponseEntity<ErrorResponse> handleResponseStatus(ResponseStatusException ex) {
+		HttpStatusCode status = ex.getStatusCode();
+		String message = ex.getReason() != null ? ex.getReason() : "Request failed";
+		String code = status instanceof HttpStatus http
+				? http.name()
+				: "HTTP_" + status.value();
+		return ResponseEntity.status(status).body(new ErrorResponse(code, message));
+	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
