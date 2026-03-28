@@ -24,6 +24,13 @@ public class DoctorService {
 				.toList();
 	}
 
+	@Transactional(readOnly = true)
+	public DoctorResponse getById(Long id) {
+		return doctorRepository.findById(id)
+				.map(DoctorResponse::from)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found"));
+	}
+
 	@Transactional
 	public DoctorResponse create(DoctorCreateRequest request) {
 		Doctor doctor = new Doctor();

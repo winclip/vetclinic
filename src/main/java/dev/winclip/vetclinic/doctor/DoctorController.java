@@ -29,6 +29,11 @@ public class DoctorController {
 		return doctorService.findAllActive();
 	}
 
+	@GetMapping("/{id}")
+	public DoctorResponse getById(@PathVariable Long id) {
+		return doctorService.getById(id);
+	}
+
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public DoctorResponse create(@Valid @RequestBody DoctorCreateRequest request) {
