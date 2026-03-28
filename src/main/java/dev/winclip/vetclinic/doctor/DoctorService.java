@@ -26,9 +26,12 @@ public class DoctorService {
 
 	@Transactional(readOnly = true)
 	public DoctorResponse getById(Long id) {
-		return doctorRepository.findById(id)
-				.map(DoctorResponse::from)
+		Doctor doctor = doctorRepository.findById(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found"));
+		if (!doctor.isActive()) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found");
+		}
+		return DoctorResponse.from(doctor);
 	}
 
 	@Transactional
@@ -44,6 +47,16 @@ public class DoctorService {
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found"));
 		applyRequest(doctor, request);
 		return DoctorResponse.from(doctorRepository.save(doctor));
+	}
+
+	@Transactional
+	public void softDelete(Long id) {
+		Doctor doctor = doctorRepository.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found"));
+		if (doctor.isActive()) {
+			doctor.setActive(false);
+			doctorRepository.save(doctor);
+		}
 	}
 
 	private static void applyRequest(Doctor doctor, DoctorCreateRequest request) {
