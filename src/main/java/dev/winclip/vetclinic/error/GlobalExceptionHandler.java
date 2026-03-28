@@ -9,10 +9,13 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
@@ -20,6 +23,27 @@ public class GlobalExceptionHandler {
 
 	private static final String UQ_EMAIL = "uq_doctors_email";
 	private static final String UQ_LICENSE = "uq_doctors_veterinary_license";
+
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<ErrorResponse> handleUnreadableBody(HttpMessageNotReadableException ex) {
+		return ResponseEntity.badRequest()
+				.body(new ErrorResponse("MALFORMED_JSON",
+						"Request body is missing, invalid JSON, or does not match the expected shape"));
+	}
+
+	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+	public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+		String required = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "value";
+		String message = "Parameter '%s' must be a valid %s".formatted(ex.getName(), required);
+		return ResponseEntity.badRequest().body(new ErrorResponse("INVALID_PARAMETER", message));
+	}
+
+	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+	public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+		return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+				.body(new ErrorResponse("METHOD_NOT_ALLOWED",
+						"HTTP method is not supported for this path"));
+	}
 
 	@ExceptionHandler(ResponseStatusException.class)
 	public ResponseEntity<ErrorResponse> handleResponseStatus(ResponseStatusException ex) {
