@@ -13,6 +13,10 @@ public record DoctorResponse(
 		String phone,
 		String email,
 		String veterinaryLicense,
+		String bio,
+		String photoUrl,
+		LocalDate dateOfBirth,
+		Integer yearsOfExperience,
 		LocalDate hiredOn,
 		boolean active,
 		Instant createdAt) {
@@ -26,6 +30,10 @@ public record DoctorResponse(
 				d.getPhone(),
 				d.getEmail(),
 				d.getVeterinaryLicense(),
+				d.getBio(),
+				d.getPhotoUrl(),
+				d.getDateOfBirth(),
+				d.getYearsOfExperience(),
 				d.getHiredOn(),
 				d.isActive(),
 				d.getCreatedAt());

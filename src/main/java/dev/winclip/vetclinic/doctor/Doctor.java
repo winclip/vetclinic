@@ -44,6 +44,18 @@ public class Doctor {
 	@Column(name = "veterinary_license", unique = true, length = 64)
 	private String veterinaryLicense;
 
+	@Column(length = 2000)
+	private String bio;
+
+	@Column(name = "photo_url", length = 512)
+	private String photoUrl;
+
+	@Column(name = "date_of_birth")
+	private LocalDate dateOfBirth;
+
+	@Column(name = "years_of_experience")
+	private Integer yearsOfExperience;
+
 	@Column(name = "hired_on")
 	private LocalDate hiredOn;
 

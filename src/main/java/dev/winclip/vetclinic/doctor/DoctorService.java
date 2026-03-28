@@ -66,9 +66,14 @@ public class DoctorService {
 		doctor.setPhone(request.phone());
 		doctor.setEmail(request.email());
 		doctor.setVeterinaryLicense(request.veterinaryLicense());
+		doctor.setBio(request.bio());
+		doctor.setPhotoUrl(request.photoUrl());
+		doctor.setDateOfBirth(request.dateOfBirth());
+		doctor.setYearsOfExperience(request.yearsOfExperience());
 		doctor.setHiredOn(request.hiredOn());
 		if (request.active() != null) {
 			doctor.setActive(request.active());
 		}
 	}
 }
+
