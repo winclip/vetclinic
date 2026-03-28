@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DoctorService {
 
+	private static final String DOCTOR_NOT_FOUND = "Doctor not found";
+
 	private final DoctorRepository doctorRepository;
 
 	@Transactional(readOnly = true)
@@ -26,16 +28,16 @@ public class DoctorService {
 
 	@Transactional(readOnly = true)
 	public DoctorResponse getById(Long id) {
-		Doctor doctor = doctorRepository.findById(id)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found"));
+		Doctor doctor = requireDoctor(id);
 		if (!doctor.isActive()) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found");
+			throw doctorNotFound();
 		}
 		return DoctorResponse.from(doctor);
 	}
 
 	@Transactional
 	public DoctorResponse create(DoctorCreateRequest request) {
+		assertNoDuplicateEmailOrLicense(request.email(), request.veterinaryLicense(), null);
 		Doctor doctor = new Doctor();
 		applyRequest(doctor, request);
 		return DoctorResponse.from(doctorRepository.save(doctor));
@@ -43,19 +45,46 @@ public class DoctorService {
 
 	@Transactional
 	public DoctorResponse update(Long id, DoctorCreateRequest request) {
-		Doctor doctor = doctorRepository.findById(id)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found"));
+		Doctor doctor = requireDoctor(id);
+		assertNoDuplicateEmailOrLicense(request.email(), request.veterinaryLicense(), id);
 		applyRequest(doctor, request);
 		return DoctorResponse.from(doctorRepository.save(doctor));
 	}
 
 	@Transactional
 	public void softDelete(Long id) {
-		Doctor doctor = doctorRepository.findById(id)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found"));
+		Doctor doctor = requireDoctor(id);
 		if (doctor.isActive()) {
 			doctor.setActive(false);
 			doctorRepository.save(doctor);
+		}
+	}
+
+	private Doctor requireDoctor(Long id) {
+		return doctorRepository.findById(id).orElseThrow(this::doctorNotFound);
+	}
+
+	private ResponseStatusException doctorNotFound() {
+		return new ResponseStatusException(HttpStatus.NOT_FOUND, DOCTOR_NOT_FOUND);
+	}
+
+	private void assertNoDuplicateEmailOrLicense(String email, String veterinaryLicense, Long excludeDoctorId) {
+		if (email != null && !email.isBlank()) {
+			boolean taken = excludeDoctorId == null
+					? doctorRepository.existsByEmail(email)
+					: doctorRepository.existsByEmailAndIdNot(email, excludeDoctorId);
+			if (taken) {
+				throw new DuplicateDoctorException("DUPLICATE_EMAIL", "A doctor with this email already exists");
+			}
+		}
+		if (veterinaryLicense != null && !veterinaryLicense.isBlank()) {
+			boolean taken = excludeDoctorId == null
+					? doctorRepository.existsByVeterinaryLicense(veterinaryLicense)
+					: doctorRepository.existsByVeterinaryLicenseAndIdNot(veterinaryLicense, excludeDoctorId);
+			if (taken) {
+				throw new DuplicateDoctorException("DUPLICATE_VETERINARY_LICENSE",
+						"This veterinary license is already registered");
+			}
 		}
 	}
 

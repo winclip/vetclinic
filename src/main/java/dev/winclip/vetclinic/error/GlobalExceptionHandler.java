@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
+import dev.winclip.vetclinic.doctor.DuplicateDoctorException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -68,6 +70,11 @@ public class GlobalExceptionHandler {
 			default -> fields.size() + " fields have invalid values (see the fields map for details)";
 		};
 		return ResponseEntity.badRequest().body(new ErrorResponse("VALIDATION_FAILED", summary, fields));
+	}
+
+	@ExceptionHandler(DuplicateDoctorException.class)
+	public ResponseEntity<ErrorResponse> handleDuplicateDoctor(DuplicateDoctorException ex) {
+		return conflict(ex.getCode(), ex.getMessage());
 	}
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
