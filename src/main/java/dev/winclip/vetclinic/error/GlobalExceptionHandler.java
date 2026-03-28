@@ -1,11 +1,15 @@
 package dev.winclip.vetclinic.error;
 
 import java.sql.SQLException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -14,6 +18,21 @@ public class GlobalExceptionHandler {
 
 	private static final String UQ_EMAIL = "uq_doctors_email";
 	private static final String UQ_LICENSE = "uq_doctors_veterinary_license";
+
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
+		Map<String, String> fields = new LinkedHashMap<>();
+		for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
+			String msg = fe.getDefaultMessage();
+			fields.put(fe.getField(), msg != null ? msg : "Invalid value");
+		}
+		String summary = switch (fields.size()) {
+			case 0 -> "Validation failed";
+			case 1 -> "One field has an invalid value (see the fields map for details)";
+			default -> fields.size() + " fields have invalid values (see the fields map for details)";
+		};
+		return ResponseEntity.badRequest().body(new ErrorResponse("VALIDATION_FAILED", summary, fields));
+	}
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
