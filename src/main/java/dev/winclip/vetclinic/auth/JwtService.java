@@ -2,14 +2,15 @@ package dev.winclip.vetclinic.auth;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import javax.crypto.SecretKey;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
@@ -64,7 +65,7 @@ public class JwtService {
 			if (username == null || username.isBlank() || role == null || role.isBlank()) {
 				return Optional.empty();
 			}
-			var authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));
+			List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 			return Optional.of(UsernamePasswordAuthenticationToken.authenticated(username, null, authorities));
 		} catch (JwtException | IllegalArgumentException ex) {
 			return Optional.empty();

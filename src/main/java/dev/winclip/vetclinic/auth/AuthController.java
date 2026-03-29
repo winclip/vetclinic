@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import dev.winclip.vetclinic.user.User;
 import dev.winclip.vetclinic.user.UserRole;
 import dev.winclip.vetclinic.user.UserService;
 import jakarta.validation.Valid;
@@ -29,7 +30,7 @@ public class AuthController {
 	@PostMapping("/register")
 	@ResponseStatus(HttpStatus.CREATED)
 	public RegisterResponse register(@Valid @RequestBody RegisterRequest request) {
-		var user = userService.register(request.username(), request.password(), UserRole.USER);
+		User user = userService.register(request.username(), request.password(), UserRole.USER);
 		return new RegisterResponse(user.getUsername(), user.getRole().name());
 	}
 

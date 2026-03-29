@@ -48,6 +48,7 @@ public class SecurityConfig {
 						.requestMatchers(HttpMethod.POST, "/api/doctors").hasRole("ADMIN")
 						.requestMatchers(HttpMethod.PUT, "/api/doctors/*").hasRole("ADMIN")
 						.requestMatchers(HttpMethod.DELETE, "/api/doctors/*").hasRole("ADMIN")
+						.requestMatchers(HttpMethod.POST, "/api/admin/users").hasRole("ADMIN")
 						.requestMatchers("/error").permitAll()
 						.anyRequest().denyAll());
 		return http.build();
