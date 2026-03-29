@@ -43,7 +43,7 @@ public class SecurityConfig {
 				.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+						.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
 						.requestMatchers(HttpMethod.GET, "/api/doctors", "/api/doctors/*").permitAll()
 						.requestMatchers(HttpMethod.POST, "/api/doctors").hasRole("ADMIN")
 						.requestMatchers(HttpMethod.PUT, "/api/doctors/*").hasRole("ADMIN")
