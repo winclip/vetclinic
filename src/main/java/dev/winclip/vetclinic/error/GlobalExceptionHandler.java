@@ -19,6 +19,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.server.ResponseStatusException;
 
 import dev.winclip.vetclinic.doctor.DuplicateDoctorException;
+import dev.winclip.vetclinic.user.DuplicateUserException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -74,6 +75,11 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(DuplicateDoctorException.class)
 	public ResponseEntity<ErrorResponse> handleDuplicateDoctor(DuplicateDoctorException ex) {
+		return conflict(ex.getCode(), ex.getMessage());
+	}
+
+	@ExceptionHandler(DuplicateUserException.class)
+	public ResponseEntity<ErrorResponse> handleDuplicateUser(DuplicateUserException ex) {
 		return conflict(ex.getCode(), ex.getMessage());
 	}
 
