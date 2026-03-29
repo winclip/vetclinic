@@ -9,6 +9,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -19,12 +20,19 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.server.ResponseStatusException;
 
 import dev.winclip.vetclinic.doctor.DuplicateDoctorException;
+import dev.winclip.vetclinic.user.DuplicateUserException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
 	private static final String UQ_EMAIL = "uq_doctors_email";
 	private static final String UQ_LICENSE = "uq_doctors_veterinary_license";
+
+	@ExceptionHandler(BadCredentialsException.class)
+	public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+				.body(new ErrorResponse("INVALID_CREDENTIALS", "Invalid username or password"));
+	}
 
 	@ExceptionHandler(HttpMessageNotReadableException.class)
 	public ResponseEntity<ErrorResponse> handleUnreadableBody(HttpMessageNotReadableException ex) {
@@ -74,6 +82,11 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(DuplicateDoctorException.class)
 	public ResponseEntity<ErrorResponse> handleDuplicateDoctor(DuplicateDoctorException ex) {
+		return conflict(ex.getCode(), ex.getMessage());
+	}
+
+	@ExceptionHandler(DuplicateUserException.class)
+	public ResponseEntity<ErrorResponse> handleDuplicateUser(DuplicateUserException ex) {
 		return conflict(ex.getCode(), ex.getMessage());
 	}
 

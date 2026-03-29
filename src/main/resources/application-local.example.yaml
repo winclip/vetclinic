@@ -3,3 +3,11 @@ spring:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${VETCLINIC_DB:vetclinic}
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD}
+  flyway:
+    baseline-on-migrate: true
+
+vetclinic:
+  bootstrap:
+    enabled: true
+    admin-username: admin
+    admin-password: ${VETCLINIC_BOOTSTRAP_ADMIN_PASSWORD:local-dev}
