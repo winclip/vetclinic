@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 public class PetService {
 
 	private static final String USER_NOT_FOUND = "User not found";
+	private static final String PET_NOT_FOUND = "Pet not found";
 
 	private final PetRepository petRepository;
 	private final UserRepository userRepository;
@@ -44,8 +45,38 @@ public class PetService {
 		return PetResponse.from(petRepository.save(pet));
 	}
 
+	@Transactional(readOnly = true)
+	public PetResponse getMyPet(String username, Long petId) {
+		Pet pet = requireMyPet(username, petId);
+		return PetResponse.from(pet);
+	}
+
+	@Transactional
+	public PetResponse updateMyPet(String username, Long petId, PetCreateRequest request) {
+		Pet pet = requireMyPet(username, petId);
+		pet.setName(request.name());
+		pet.setSpecies(request.species());
+		pet.setBreed(request.breed());
+		pet.setSex(request.sex());
+		pet.setDateOfBirth(request.dateOfBirth());
+		pet.setNotes(request.notes());
+		return PetResponse.from(petRepository.save(pet));
+	}
+
+	@Transactional
+	public void deleteMyPet(String username, Long petId) {
+		Pet pet = requireMyPet(username, petId);
+		petRepository.delete(pet);
+	}
+
 	private User requireUser(String username) {
 		return userRepository.findByUsername(username)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
+	}
+
+	private Pet requireMyPet(String username, Long petId) {
+		User owner = requireUser(username);
+		return petRepository.findByIdAndOwnerId(petId, owner.getId())
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, PET_NOT_FOUND));
 	}
 }
