@@ -1,6 +1,7 @@
 package dev.winclip.vetclinic.pet;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -25,11 +26,10 @@ public class PetService {
 	private final UserRepository userRepository;
 
 	@Transactional(readOnly = true)
-	public List<PetResponse> listMyPets(String username) {
+	public Page<PetResponse> listMyPets(String username, Pageable pageable) {
 		User owner = requireUser(username);
-		return petRepository.findAllByOwnerIdAndActiveTrueOrderByCreatedAtDesc(owner.getId()).stream()
-				.map(PetResponse::from)
-				.toList();
+		return petRepository.findAllByOwnerIdAndActiveTrue(owner.getId(), pageable)
+				.map(PetResponse::from);
 	}
 
 	@Transactional
@@ -65,21 +65,19 @@ public class PetService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<AdminPetResponse> listAllPetsForAdmin() {
-		return petRepository.findAllByOrderByCreatedAtDesc().stream()
-				.map(AdminPetResponse::from)
-				.toList();
+	public Page<AdminPetResponse> listAllPetsForAdmin(Pageable pageable) {
+		return petRepository.findAllByOrderByCreatedAtDesc(pageable)
+				.map(AdminPetResponse::from);
 	}
 
 	@Transactional(readOnly = true)
-	public List<AdminPetResponse> listPetsForAdmin(Boolean active) {
+	public Page<AdminPetResponse> listPetsForAdmin(Boolean active, Pageable pageable) {
 		if (active == null) {
-			return listAllPetsForAdmin();
+			return listAllPetsForAdmin(pageable);
 		}
-		return (active ? petRepository.findAllByActiveTrueOrderByCreatedAtDesc()
-				: petRepository.findAllByActiveFalseOrderByCreatedAtDesc()).stream()
-						.map(AdminPetResponse::from)
-						.toList();
+		return (active ? petRepository.findAllByActiveTrueOrderByCreatedAtDesc(pageable)
+				: petRepository.findAllByActiveFalseOrderByCreatedAtDesc(pageable))
+						.map(AdminPetResponse::from);
 	}
 
 	@Transactional
