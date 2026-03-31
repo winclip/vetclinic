@@ -19,6 +19,5 @@ spring:
 
 vetclinic:
   jwt:
-    # HS256: минимум 32 байта. В проде задайте VETCLINIC_JWT_SECRET.
     secret: ${VETCLINIC_JWT_SECRET:dev-only-change-me-min-32-chars!!}
     expiration: ${VETCLINIC_JWT_EXPIRATION:PT1H}
