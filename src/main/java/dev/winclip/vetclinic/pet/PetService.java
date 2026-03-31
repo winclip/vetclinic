@@ -83,6 +83,20 @@ public class PetService {
 	}
 
 	@Transactional
+	public AdminPetResponse restorePetForAdmin(Long petId) {
+		if (petId == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pet id is required");
+		}
+		Pet pet = petRepository.findById(petId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, PET_NOT_FOUND));
+		if (!pet.isActive()) {
+			pet.setActive(true);
+			pet = petRepository.save(pet);
+		}
+		return AdminPetResponse.from(pet);
+	}
+
+	@Transactional
 	public void deleteMyPet(String username, Long petId) {
 		Pet pet = requireMyPet(username, petId);
 		if (pet.isActive()) {
