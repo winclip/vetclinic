@@ -12,4 +12,8 @@ public interface PetRepository extends JpaRepository<Pet, Long> {
 	Optional<Pet> findByIdAndOwnerIdAndActiveTrue(Long id, Long ownerId);
 
 	List<Pet> findAllByOrderByCreatedAtDesc();
+
+	List<Pet> findAllByActiveTrueOrderByCreatedAtDesc();
+
+	List<Pet> findAllByActiveFalseOrderByCreatedAtDesc();
 }

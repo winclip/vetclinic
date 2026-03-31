@@ -71,6 +71,17 @@ public class PetService {
 				.toList();
 	}
 
+	@Transactional(readOnly = true)
+	public List<AdminPetResponse> listPetsForAdmin(Boolean active) {
+		if (active == null) {
+			return listAllPetsForAdmin();
+		}
+		return (active ? petRepository.findAllByActiveTrueOrderByCreatedAtDesc()
+				: petRepository.findAllByActiveFalseOrderByCreatedAtDesc()).stream()
+						.map(AdminPetResponse::from)
+						.toList();
+	}
+
 	@Transactional
 	public void deleteMyPet(String username, Long petId) {
 		Pet pet = requireMyPet(username, petId);
