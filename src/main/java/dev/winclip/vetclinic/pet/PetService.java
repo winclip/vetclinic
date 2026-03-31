@@ -9,6 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import dev.winclip.vetclinic.pet.dto.PetCreateRequest;
 import dev.winclip.vetclinic.pet.dto.PetResponse;
+import dev.winclip.vetclinic.pet.dto.AdminPetResponse;
 import dev.winclip.vetclinic.user.User;
 import dev.winclip.vetclinic.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class PetService {
 	@Transactional(readOnly = true)
 	public List<PetResponse> listMyPets(String username) {
 		User owner = requireUser(username);
-		return petRepository.findAllByOwnerIdOrderByCreatedAtDesc(owner.getId()).stream()
+		return petRepository.findAllByOwnerIdAndActiveTrueOrderByCreatedAtDesc(owner.getId()).stream()
 				.map(PetResponse::from)
 				.toList();
 	}
@@ -63,10 +64,20 @@ public class PetService {
 		return PetResponse.from(petRepository.save(pet));
 	}
 
+	@Transactional(readOnly = true)
+	public List<AdminPetResponse> listAllPetsForAdmin() {
+		return petRepository.findAllByOrderByCreatedAtDesc().stream()
+				.map(AdminPetResponse::from)
+				.toList();
+	}
+
 	@Transactional
 	public void deleteMyPet(String username, Long petId) {
 		Pet pet = requireMyPet(username, petId);
-		petRepository.delete(pet);
+		if (pet.isActive()) {
+			pet.setActive(false);
+			petRepository.save(pet);
+		}
 	}
 
 	private User requireUser(String username) {
@@ -76,7 +87,7 @@ public class PetService {
 
 	private Pet requireMyPet(String username, Long petId) {
 		User owner = requireUser(username);
-		return petRepository.findByIdAndOwnerId(petId, owner.getId())
+		return petRepository.findByIdAndOwnerIdAndActiveTrue(petId, owner.getId())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, PET_NOT_FOUND));
 	}
 }

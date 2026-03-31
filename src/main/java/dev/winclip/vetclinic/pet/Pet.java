@@ -56,6 +56,9 @@ public class Pet {
 	@Column(length = 2000)
 	private String notes;
 
+	@Column(name = "is_active", nullable = false)
+	private boolean active = true;
+
 	@Column(name = "created_at", nullable = false, updatable = false)
 	@CreationTimestamp
 	private Instant createdAt;

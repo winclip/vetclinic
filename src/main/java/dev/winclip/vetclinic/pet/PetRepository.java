@@ -7,7 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PetRepository extends JpaRepository<Pet, Long> {
 
-	List<Pet> findAllByOwnerIdOrderByCreatedAtDesc(Long ownerId);
+	List<Pet> findAllByOwnerIdAndActiveTrueOrderByCreatedAtDesc(Long ownerId);
 
-	Optional<Pet> findByIdAndOwnerId(Long id, Long ownerId);
+	Optional<Pet> findByIdAndOwnerIdAndActiveTrue(Long id, Long ownerId);
+
+	List<Pet> findAllByOrderByCreatedAtDesc();
 }
