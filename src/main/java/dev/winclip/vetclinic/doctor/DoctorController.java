@@ -27,14 +27,20 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DoctorController {
 
+	private static final int DEFAULT_SIZE = 20;
+	private static final int MAX_SIZE = 100;
+
 	private final DoctorService doctorService;
 
 	@GetMapping
 	public PagedResponse<DoctorResponse> list(
 			@RequestParam(defaultValue = "1") int page,
 			@RequestParam(defaultValue = "20") int size) {
-		int internalPage = Math.max(0, page - 1);
-		Pageable pageable = PageRequest.of(internalPage, size, Sort.by(Sort.Direction.ASC, "lastName", "firstName"));
+		int safePage = Math.max(1, page);
+		int safeSize = (size <= 0) ? DEFAULT_SIZE : Math.min(MAX_SIZE, size);
+
+		int internalPage = safePage - 1;
+		Pageable pageable = PageRequest.of(internalPage, safeSize, Sort.by(Sort.Direction.ASC, "lastName", "firstName"));
 		Page<DoctorResponse> result = doctorService.findAllActive(pageable);
 		PagedResponse.Info info = new PagedResponse.Info(result.getTotalElements(), result.getTotalPages(),
 				result.getNumber() + 1, result.getSize());

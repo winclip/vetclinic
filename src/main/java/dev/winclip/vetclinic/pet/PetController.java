@@ -28,6 +28,9 @@ import org.springframework.data.domain.Sort;
 @RequiredArgsConstructor
 public class PetController {
 
+	private static final int DEFAULT_SIZE = 20;
+	private static final int MAX_SIZE = 100;
+
 	private final PetService petService;
 
 	@GetMapping
@@ -35,8 +38,11 @@ public class PetController {
 			@AuthenticationPrincipal String username,
 			@RequestParam(defaultValue = "1") int pageNumber,
 			@RequestParam(defaultValue = "20") int size) {
-		int internalPage = Math.max(0, pageNumber - 1);
-		Pageable pageable = PageRequest.of(internalPage, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+		int safePage = Math.max(1, pageNumber);
+		int safeSize = (size <= 0) ? DEFAULT_SIZE : Math.min(MAX_SIZE, size);
+
+		int internalPage = safePage - 1;
+		Pageable pageable = PageRequest.of(internalPage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
 		Page<PetResponse> result = petService.listMyPets(username, pageable);
 		PagedResponse.Info info = new PagedResponse.Info(result.getTotalElements(), result.getTotalPages(),
 				result.getNumber() + 1, result.getSize());
