@@ -1,19 +1,20 @@
 package dev.winclip.vetclinic.pet;
 
-import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PetRepository extends JpaRepository<Pet, Long> {
 
-	List<Pet> findAllByOwnerIdAndActiveTrueOrderByCreatedAtDesc(Long ownerId);
+	Page<Pet> findAllByOwnerIdAndActiveTrue(Long ownerId, Pageable pageable);
 
 	Optional<Pet> findByIdAndOwnerIdAndActiveTrue(Long id, Long ownerId);
 
-	List<Pet> findAllByOrderByCreatedAtDesc();
+	Page<Pet> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
-	List<Pet> findAllByActiveTrueOrderByCreatedAtDesc();
+	Page<Pet> findAllByActiveTrueOrderByCreatedAtDesc(Pageable pageable);
 
-	List<Pet> findAllByActiveFalseOrderByCreatedAtDesc();
+	Page<Pet> findAllByActiveFalseOrderByCreatedAtDesc(Pageable pageable);
 }

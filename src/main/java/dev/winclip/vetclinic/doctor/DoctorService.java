@@ -1,11 +1,12 @@
 package dev.winclip.vetclinic.doctor;
 
-import java.util.List;
-
 import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import java.util.Objects;
 
 import dev.winclip.vetclinic.doctor.dto.DoctorCreateRequest;
 import dev.winclip.vetclinic.doctor.dto.DoctorResponse;
@@ -20,10 +21,9 @@ public class DoctorService {
 	private final DoctorRepository doctorRepository;
 
 	@Transactional(readOnly = true)
-	public List<DoctorResponse> findAllActive() {
-		return doctorRepository.findAllByActiveTrueOrderByLastNameAscFirstNameAsc().stream()
-				.map(DoctorResponse::from)
-				.toList();
+	public Page<DoctorResponse> findAllActive(Pageable pageable) {
+		return doctorRepository.findAllByActiveTrue(pageable)
+				.map(DoctorResponse::from);
 	}
 
 	@Transactional(readOnly = true)
@@ -45,14 +45,21 @@ public class DoctorService {
 
 	@Transactional
 	public DoctorResponse update(Long id, DoctorCreateRequest request) {
+		if (id == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Doctor id is required");
+		}
 		Doctor doctor = requireDoctor(id);
 		assertNoDuplicateEmailOrLicense(request.email(), request.veterinaryLicense(), id);
 		applyRequest(doctor, request);
-		return DoctorResponse.from(doctorRepository.save(doctor));
+		Doctor saved = doctorRepository.save(Objects.requireNonNull(doctor));
+		return DoctorResponse.from(Objects.requireNonNull(saved));
 	}
 
 	@Transactional
 	public void softDelete(Long id) {
+		if (id == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Doctor id is required");
+		}
 		Doctor doctor = requireDoctor(id);
 		if (doctor.isActive()) {
 			doctor.setActive(false);
@@ -61,6 +68,9 @@ public class DoctorService {
 	}
 
 	private Doctor requireDoctor(Long id) {
+		if (id == null) {
+			throw doctorNotFound();
+		}
 		return doctorRepository.findById(id).orElseThrow(this::doctorNotFound);
 	}
 
