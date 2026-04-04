@@ -11,3 +11,5 @@ vetclinic:
     enabled: true
     admin-username: admin
     admin-password: ${VETCLINIC_BOOTSTRAP_ADMIN_PASSWORD:local-dev}
+    admin-email: admin@localhost
+    admin-full-name: Administrator

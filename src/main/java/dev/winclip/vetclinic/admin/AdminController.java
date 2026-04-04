@@ -23,7 +23,16 @@ public class AdminController {
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public RegisterResponse createUser(@Valid @RequestBody AdminUserCreateRequest request) {
-		User user = userService.register(request.username(), request.password(), request.role());
-		return new RegisterResponse(user.getUsername(), user.getRole().name());
+		User user = userService.register(
+				request.username(),
+				request.password(),
+				request.role(),
+				request.email(),
+				request.fullName());
+		return new RegisterResponse(
+				user.getUsername(),
+				user.getRole().name(),
+				user.getEmail(),
+				user.getFullName());
 	}
 }

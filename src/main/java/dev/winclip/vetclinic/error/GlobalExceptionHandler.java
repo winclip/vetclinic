@@ -27,6 +27,7 @@ public class GlobalExceptionHandler {
 
 	private static final String UQ_EMAIL = "uq_doctors_email";
 	private static final String UQ_LICENSE = "uq_doctors_veterinary_license";
+	private static final String UQ_USERS_EMAIL = "uq_users_email";
 
 	@ExceptionHandler(BadCredentialsException.class)
 	public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
@@ -103,6 +104,9 @@ public class GlobalExceptionHandler {
 		if (constraint != null && containsIgnoreCase(constraint, UQ_LICENSE)) {
 			return conflict("DUPLICATE_VETERINARY_LICENSE", "This veterinary license is already registered");
 		}
+		if (constraint != null && containsIgnoreCase(constraint, UQ_USERS_EMAIL)) {
+			return conflict("DUPLICATE_EMAIL", "This email is already registered");
+		}
 		return conflict("DUPLICATE_KEY", "This value already exists");
 	}
 
@@ -141,6 +145,9 @@ public class GlobalExceptionHandler {
 		}
 		if (msg.contains(UQ_LICENSE)) {
 			return UQ_LICENSE;
+		}
+		if (msg.contains(UQ_USERS_EMAIL)) {
+			return UQ_USERS_EMAIL;
 		}
 		return null;
 	}
