@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import dev.winclip.vetclinic.user.dto.UserMeResponse;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -39,5 +40,17 @@ public class UserService {
 		user.setEmail(normalizedEmail);
 		user.setFullName(normalizedFullName);
 		return userRepository.save(user);
+	}
+
+	@Transactional(readOnly = true)
+	public UserMeResponse getCurrentUserProfile(String username) {
+		User user = userRepository.findByUsername(username)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+		return new UserMeResponse(
+				user.getId(),
+				user.getUsername(),
+				user.getEmail(),
+				user.getFullName(),
+				user.getRole().name());
 	}
 }
