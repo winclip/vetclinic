@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import dev.winclip.vetclinic.user.dto.UserMeResponse;
 import dev.winclip.vetclinic.user.dto.UserMeUpdateRequest;
+import dev.winclip.vetclinic.user.dto.UserPasswordChangeRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -80,5 +81,19 @@ public class UserService {
 		}
 		userRepository.save(user);
 		return getCurrentUserProfile(username);
+	}
+
+	@Transactional
+	public void changePassword(String username, UserPasswordChangeRequest request) {
+		User user = userRepository.findByUsername(username)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+		if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current password is incorrect");
+		}
+		if (request.currentPassword().equals(request.newPassword())) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must differ from current password");
+		}
+		user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+		userRepository.save(user);
 	}
 }
