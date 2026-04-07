@@ -14,3 +14,5 @@ vetclinic:
     enabled: ${VETCLINIC_BOOTSTRAP_ENABLED:false}
     admin-username: ${VETCLINIC_BOOTSTRAP_ADMIN_USERNAME:admin}
     admin-password: ${VETCLINIC_BOOTSTRAP_ADMIN_PASSWORD:}
+    admin-email: ${VETCLINIC_BOOTSTRAP_ADMIN_EMAIL:admin@localhost}
+    admin-full-name: ${VETCLINIC_BOOTSTRAP_ADMIN_FULL_NAME:Administrator}

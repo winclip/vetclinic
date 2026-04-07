@@ -30,6 +30,12 @@ public class LocalAdminBootstrap implements ApplicationRunner {
 	@Value("${vetclinic.bootstrap.admin-password:local-dev}")
 	private String adminPassword;
 
+	@Value("${vetclinic.bootstrap.admin-email:admin@localhost}")
+	private String adminEmail;
+
+	@Value("${vetclinic.bootstrap.admin-full-name:Administrator}")
+	private String adminFullName;
+
 	@Override
 	public void run(ApplicationArguments args) {
 		if (!enabled) {
@@ -45,7 +51,7 @@ public class LocalAdminBootstrap implements ApplicationRunner {
 			log.warn("vetclinic bootstrap: admin password empty, not creating user");
 			return;
 		}
-		userService.register(adminUsername, adminPassword, UserRole.ADMIN);
+		userService.register(adminUsername, adminPassword, UserRole.ADMIN, adminEmail, adminFullName);
 		log.info("vetclinic bootstrap: ok, seeded {}", adminUsername);
 	}
 }
