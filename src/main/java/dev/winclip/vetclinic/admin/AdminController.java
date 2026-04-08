@@ -10,12 +10,15 @@ import org.springframework.web.bind.annotation.RestController;
 import dev.winclip.vetclinic.auth.RegisterResponse;
 import dev.winclip.vetclinic.user.User;
 import dev.winclip.vetclinic.user.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/admin/users")
+@Tag(name = "admin", description = "Admin endpoints")
 @RequiredArgsConstructor
 public class AdminController {
 
@@ -24,6 +27,7 @@ public class AdminController {
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "Create user", description = "Creates a new user with the requested role (ADMIN only).")
 	public RegisterResponse createUser(@Valid @RequestBody AdminUserCreateRequest request) {
 		User user = userService.register(
 				request.username(),

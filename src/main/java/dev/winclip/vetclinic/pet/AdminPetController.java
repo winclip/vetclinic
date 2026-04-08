@@ -13,12 +13,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import dev.winclip.vetclinic.api.PagedResponse;
 import dev.winclip.vetclinic.pet.dto.AdminPetResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 
 @RestController
 @RequestMapping("/api/admin/pets")
+@Tag(name = "admin", description = "Admin endpoints")
 @RequiredArgsConstructor
 public class AdminPetController {
 
@@ -30,6 +33,7 @@ public class AdminPetController {
 	@GetMapping
 	@PreAuthorize("hasRole('ADMIN')")
 	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "List pets (admin)", description = "Returns a paged list of pets for admins. Can be filtered by active flag.")
 	public PagedResponse<AdminPetResponse> listAll(
 			@RequestParam(required = false) Boolean active,
 			@RequestParam(defaultValue = "1") int page,
@@ -48,6 +52,7 @@ public class AdminPetController {
 	@PostMapping("/{id}/restore")
 	@PreAuthorize("hasRole('ADMIN')")
 	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "Restore pet (admin)", description = "Restores a soft-deleted pet (ADMIN only).")
 	public AdminPetResponse restore(@PathVariable Long id) {
 		return petService.restorePetForAdmin(id);
 	}

@@ -13,12 +13,15 @@ import org.springframework.web.bind.annotation.RestController;
 import dev.winclip.vetclinic.user.dto.UserMeResponse;
 import dev.winclip.vetclinic.user.dto.UserMeUpdateRequest;
 import dev.winclip.vetclinic.user.dto.UserPasswordChangeRequest;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/users")
+@Tag(name = "users", description = "Current user profile")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -26,12 +29,14 @@ public class UserController {
 
 	@GetMapping("/me")
 	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "Get my profile", description = "Returns the current authenticated user's profile.")
 	public UserMeResponse me(@AuthenticationPrincipal String username) {
 		return userService.getCurrentUserProfile(username);
 	}
 
 	@PatchMapping("/me")
 	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "Update my profile", description = "Updates email and/or fullName for the current authenticated user.")
 	public UserMeResponse patchMe(
 			@AuthenticationPrincipal String username,
 			@Valid @RequestBody UserMeUpdateRequest request) {
@@ -41,6 +46,7 @@ public class UserController {
 	@PutMapping("/me/password")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "Change my password", description = "Changes password for the current authenticated user.")
 	public void changePassword(
 			@AuthenticationPrincipal String username,
 			@Valid @RequestBody UserPasswordChangeRequest request) {

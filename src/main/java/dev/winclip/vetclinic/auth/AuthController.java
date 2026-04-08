@@ -15,11 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 import dev.winclip.vetclinic.user.User;
 import dev.winclip.vetclinic.user.UserRole;
 import dev.winclip.vetclinic.user.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "auth", description = "Registration and login")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -29,6 +32,7 @@ public class AuthController {
 
 	@PostMapping("/register")
 	@ResponseStatus(HttpStatus.CREATED)
+	@Operation(summary = "Register user", description = "Creates a new USER account and returns basic profile info.")
 	public RegisterResponse register(@Valid @RequestBody RegisterRequest request) {
 		User user = userService.register(
 				request.username(),
@@ -44,6 +48,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/login")
+	@Operation(summary = "Login", description = "Authenticates user credentials and returns a JWT access token.")
 	public LoginResponse login(@Valid @RequestBody LoginRequest request) {
 		Authentication auth = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(request.username(), request.password()));

@@ -19,12 +19,15 @@ import org.springframework.web.bind.annotation.RestController;
 import dev.winclip.vetclinic.api.PagedResponse;
 import dev.winclip.vetclinic.doctor.dto.DoctorCreateRequest;
 import dev.winclip.vetclinic.doctor.dto.DoctorResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/doctors")
+@Tag(name = "doctors", description = "Doctors directory")
 @RequiredArgsConstructor
 public class DoctorController {
 
@@ -34,6 +37,7 @@ public class DoctorController {
 	private final DoctorService doctorService;
 
 	@GetMapping
+	@Operation(summary = "List doctors", description = "Returns a paged list of active doctors.")
 	public PagedResponse<DoctorResponse> list(
 			@RequestParam(defaultValue = "1") int page,
 			@RequestParam(defaultValue = "20") int size) {
@@ -49,6 +53,7 @@ public class DoctorController {
 	}
 
 	@GetMapping("/{id}")
+	@Operation(summary = "Get doctor", description = "Returns a single doctor by id.")
 	public DoctorResponse getById(@PathVariable Long id) {
 		return doctorService.getById(id);
 	}
@@ -56,12 +61,14 @@ public class DoctorController {
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "Create doctor", description = "Creates a new doctor (ADMIN only).")
 	public DoctorResponse create(@Valid @RequestBody DoctorCreateRequest request) {
 		return doctorService.create(request);
 	}
 
 	@PutMapping("/{id}")
 	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "Update doctor", description = "Updates a doctor (ADMIN only).")
 	public DoctorResponse update(@PathVariable Long id, @Valid @RequestBody DoctorCreateRequest request) {
 		return doctorService.update(id, request);
 	}
@@ -69,6 +76,7 @@ public class DoctorController {
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "Delete doctor", description = "Soft-deletes a doctor (ADMIN only).")
 	public void softDelete(@PathVariable Long id) {
 		doctorService.softDelete(id);
 	}

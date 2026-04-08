@@ -19,13 +19,16 @@ import org.springframework.web.bind.annotation.RestController;
 import dev.winclip.vetclinic.api.PagedResponse;
 import dev.winclip.vetclinic.pet.dto.PetCreateRequest;
 import dev.winclip.vetclinic.pet.dto.PetResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 
 @RestController
 @RequestMapping("/api/pets/me")
+@Tag(name = "pets", description = "Pets of the current user")
 @RequiredArgsConstructor
 public class PetController {
 
@@ -36,6 +39,7 @@ public class PetController {
 
 	@GetMapping
 	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "List my pets", description = "Returns a paged list of pets owned by the current authenticated user.")
 	public PagedResponse<PetResponse> list(
 			@AuthenticationPrincipal String username,
 			@RequestParam(defaultValue = "1") int pageNumber,
@@ -54,18 +58,21 @@ public class PetController {
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "Create my pet", description = "Creates a new pet owned by the current authenticated user.")
 	public PetResponse create(@AuthenticationPrincipal String username, @Valid @RequestBody PetCreateRequest request) {
 		return petService.createMyPet(username, request);
 	}
 
 	@GetMapping("/{id}")
 	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "Get my pet", description = "Returns a single pet owned by the current authenticated user.")
 	public PetResponse getById(@AuthenticationPrincipal String username, @PathVariable Long id) {
 		return petService.getMyPet(username, id);
 	}
 
 	@PutMapping("/{id}")
 	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "Update my pet", description = "Updates a pet owned by the current authenticated user.")
 	public PetResponse update(
 			@AuthenticationPrincipal String username,
 			@PathVariable Long id,
@@ -76,6 +83,7 @@ public class PetController {
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "Delete my pet", description = "Soft-deletes (or deletes) a pet owned by the current authenticated user.")
 	public void delete(@AuthenticationPrincipal String username, @PathVariable Long id) {
 		petService.deleteMyPet(username, id);
 	}
