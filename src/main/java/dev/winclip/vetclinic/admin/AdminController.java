@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import dev.winclip.vetclinic.auth.RegisterResponse;
 import dev.winclip.vetclinic.user.User;
 import dev.winclip.vetclinic.user.UserService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -22,6 +23,7 @@ public class AdminController {
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
+	@SecurityRequirement(name = "bearerAuth")
 	public RegisterResponse createUser(@Valid @RequestBody AdminUserCreateRequest request) {
 		User user = userService.register(
 				request.username(),

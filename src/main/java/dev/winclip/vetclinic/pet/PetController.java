@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import dev.winclip.vetclinic.api.PagedResponse;
 import dev.winclip.vetclinic.pet.dto.PetCreateRequest;
 import dev.winclip.vetclinic.pet.dto.PetResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -34,6 +35,7 @@ public class PetController {
 	private final PetService petService;
 
 	@GetMapping
+	@SecurityRequirement(name = "bearerAuth")
 	public PagedResponse<PetResponse> list(
 			@AuthenticationPrincipal String username,
 			@RequestParam(defaultValue = "1") int pageNumber,
@@ -51,16 +53,19 @@ public class PetController {
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
+	@SecurityRequirement(name = "bearerAuth")
 	public PetResponse create(@AuthenticationPrincipal String username, @Valid @RequestBody PetCreateRequest request) {
 		return petService.createMyPet(username, request);
 	}
 
 	@GetMapping("/{id}")
+	@SecurityRequirement(name = "bearerAuth")
 	public PetResponse getById(@AuthenticationPrincipal String username, @PathVariable Long id) {
 		return petService.getMyPet(username, id);
 	}
 
 	@PutMapping("/{id}")
+	@SecurityRequirement(name = "bearerAuth")
 	public PetResponse update(
 			@AuthenticationPrincipal String username,
 			@PathVariable Long id,
@@ -70,6 +75,7 @@ public class PetController {
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@SecurityRequirement(name = "bearerAuth")
 	public void delete(@AuthenticationPrincipal String username, @PathVariable Long id) {
 		petService.deleteMyPet(username, id);
 	}

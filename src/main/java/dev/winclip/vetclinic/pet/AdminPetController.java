@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import dev.winclip.vetclinic.api.PagedResponse;
 import dev.winclip.vetclinic.pet.dto.AdminPetResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 
@@ -28,6 +29,7 @@ public class AdminPetController {
 
 	@GetMapping
 	@PreAuthorize("hasRole('ADMIN')")
+	@SecurityRequirement(name = "bearerAuth")
 	public PagedResponse<AdminPetResponse> listAll(
 			@RequestParam(required = false) Boolean active,
 			@RequestParam(defaultValue = "1") int page,
@@ -45,6 +47,7 @@ public class AdminPetController {
 
 	@PostMapping("/{id}/restore")
 	@PreAuthorize("hasRole('ADMIN')")
+	@SecurityRequirement(name = "bearerAuth")
 	public AdminPetResponse restore(@PathVariable Long id) {
 		return petService.restorePetForAdmin(id);
 	}

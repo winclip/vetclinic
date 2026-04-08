@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import dev.winclip.vetclinic.api.PagedResponse;
 import dev.winclip.vetclinic.doctor.dto.DoctorCreateRequest;
 import dev.winclip.vetclinic.doctor.dto.DoctorResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -54,17 +55,20 @@ public class DoctorController {
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
+	@SecurityRequirement(name = "bearerAuth")
 	public DoctorResponse create(@Valid @RequestBody DoctorCreateRequest request) {
 		return doctorService.create(request);
 	}
 
 	@PutMapping("/{id}")
+	@SecurityRequirement(name = "bearerAuth")
 	public DoctorResponse update(@PathVariable Long id, @Valid @RequestBody DoctorCreateRequest request) {
 		return doctorService.update(id, request);
 	}
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@SecurityRequirement(name = "bearerAuth")
 	public void softDelete(@PathVariable Long id) {
 		doctorService.softDelete(id);
 	}
