@@ -7,10 +7,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import dev.winclip.vetclinic.error.ErrorResponse;
 import dev.winclip.vetclinic.auth.RegisterResponse;
 import dev.winclip.vetclinic.user.User;
 import dev.winclip.vetclinic.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,6 +33,17 @@ public class AdminController {
 	@ResponseStatus(HttpStatus.CREATED)
 	@SecurityRequirement(name = "bearerAuth")
 	@Operation(summary = "Create user", description = "Creates a new user with the requested role (ADMIN only).")
+	@ApiResponses({
+			@ApiResponse(responseCode = "201", description = "Created"),
+			@ApiResponse(responseCode = "400", description = "Validation failed",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "401", description = "Missing or invalid JWT",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "403", description = "Forbidden (ADMIN only)",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "409", description = "Duplicate username/email",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+	})
 	public RegisterResponse createUser(@Valid @RequestBody AdminUserCreateRequest request) {
 		User user = userService.register(
 				request.username(),

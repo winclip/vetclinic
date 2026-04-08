@@ -4,6 +4,10 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
 
+springdoc:
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
   jpa:
     open-in-view: false
     hibernate:

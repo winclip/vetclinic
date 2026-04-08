@@ -17,9 +17,15 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import dev.winclip.vetclinic.api.PagedResponse;
+import dev.winclip.vetclinic.error.ErrorResponse;
 import dev.winclip.vetclinic.doctor.dto.DoctorCreateRequest;
 import dev.winclip.vetclinic.doctor.dto.DoctorResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -38,8 +44,13 @@ public class DoctorController {
 
 	@GetMapping
 	@Operation(summary = "List doctors", description = "Returns a paged list of active doctors.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "OK")
+	})
 	public PagedResponse<DoctorResponse> list(
+			@Parameter(description = "1-based page number", example = "1")
 			@RequestParam(defaultValue = "1") int page,
+			@Parameter(description = "Page size (max 100)", example = "20")
 			@RequestParam(defaultValue = "20") int size) {
 		int safePage = Math.max(1, page);
 		int safeSize = (size <= 0) ? DEFAULT_SIZE : Math.min(MAX_SIZE, size);
@@ -54,6 +65,11 @@ public class DoctorController {
 
 	@GetMapping("/{id}")
 	@Operation(summary = "Get doctor", description = "Returns a single doctor by id.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "OK"),
+			@ApiResponse(responseCode = "404", description = "Doctor not found",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+	})
 	public DoctorResponse getById(@PathVariable Long id) {
 		return doctorService.getById(id);
 	}
@@ -62,6 +78,17 @@ public class DoctorController {
 	@ResponseStatus(HttpStatus.CREATED)
 	@SecurityRequirement(name = "bearerAuth")
 	@Operation(summary = "Create doctor", description = "Creates a new doctor (ADMIN only).")
+	@ApiResponses({
+			@ApiResponse(responseCode = "201", description = "Created"),
+			@ApiResponse(responseCode = "400", description = "Validation failed",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "401", description = "Missing or invalid JWT",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "403", description = "Forbidden (ADMIN only)",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "409", description = "Duplicate email/license",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+	})
 	public DoctorResponse create(@Valid @RequestBody DoctorCreateRequest request) {
 		return doctorService.create(request);
 	}
@@ -69,6 +96,19 @@ public class DoctorController {
 	@PutMapping("/{id}")
 	@SecurityRequirement(name = "bearerAuth")
 	@Operation(summary = "Update doctor", description = "Updates a doctor (ADMIN only).")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "OK"),
+			@ApiResponse(responseCode = "400", description = "Validation failed",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "401", description = "Missing or invalid JWT",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "403", description = "Forbidden (ADMIN only)",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "404", description = "Doctor not found",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "409", description = "Duplicate email/license",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+	})
 	public DoctorResponse update(@PathVariable Long id, @Valid @RequestBody DoctorCreateRequest request) {
 		return doctorService.update(id, request);
 	}
@@ -77,6 +117,15 @@ public class DoctorController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@SecurityRequirement(name = "bearerAuth")
 	@Operation(summary = "Delete doctor", description = "Soft-deletes a doctor (ADMIN only).")
+	@ApiResponses({
+			@ApiResponse(responseCode = "204", description = "Deleted"),
+			@ApiResponse(responseCode = "401", description = "Missing or invalid JWT",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "403", description = "Forbidden (ADMIN only)",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "404", description = "Doctor not found",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+	})
 	public void softDelete(@PathVariable Long id) {
 		doctorService.softDelete(id);
 	}

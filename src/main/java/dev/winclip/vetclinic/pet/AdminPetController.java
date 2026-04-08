@@ -12,8 +12,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import dev.winclip.vetclinic.api.PagedResponse;
+import dev.winclip.vetclinic.error.ErrorResponse;
 import dev.winclip.vetclinic.pet.dto.AdminPetResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -34,9 +40,19 @@ public class AdminPetController {
 	@PreAuthorize("hasRole('ADMIN')")
 	@SecurityRequirement(name = "bearerAuth")
 	@Operation(summary = "List pets (admin)", description = "Returns a paged list of pets for admins. Can be filtered by active flag.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "OK"),
+			@ApiResponse(responseCode = "401", description = "Missing or invalid JWT",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "403", description = "Forbidden (ADMIN only)",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+	})
 	public PagedResponse<AdminPetResponse> listAll(
+			@Parameter(description = "Filter by active flag (optional)", example = "true")
 			@RequestParam(required = false) Boolean active,
+			@Parameter(description = "1-based page number", example = "1")
 			@RequestParam(defaultValue = "1") int page,
+			@Parameter(description = "Page size (max 100)", example = "20")
 			@RequestParam(defaultValue = "20") int size) {
 		int safePage = Math.max(1, page);
 		int safeSize = (size <= 0) ? DEFAULT_SIZE : Math.min(MAX_SIZE, size);
@@ -53,6 +69,15 @@ public class AdminPetController {
 	@PreAuthorize("hasRole('ADMIN')")
 	@SecurityRequirement(name = "bearerAuth")
 	@Operation(summary = "Restore pet (admin)", description = "Restores a soft-deleted pet (ADMIN only).")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "OK"),
+			@ApiResponse(responseCode = "401", description = "Missing or invalid JWT",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "403", description = "Forbidden (ADMIN only)",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "404", description = "Pet not found",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+	})
 	public AdminPetResponse restore(@PathVariable Long id) {
 		return petService.restorePetForAdmin(id);
 	}

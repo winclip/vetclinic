@@ -15,7 +15,13 @@ import org.springframework.web.bind.annotation.RestController;
 import dev.winclip.vetclinic.user.User;
 import dev.winclip.vetclinic.user.UserRole;
 import dev.winclip.vetclinic.user.UserService;
+import dev.winclip.vetclinic.error.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +39,19 @@ public class AuthController {
 	@PostMapping("/register")
 	@ResponseStatus(HttpStatus.CREATED)
 	@Operation(summary = "Register user", description = "Creates a new USER account and returns basic profile info.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "201", description = "Created"),
+			@ApiResponse(responseCode = "400", description = "Validation failed",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class),
+							examples = @ExampleObject(value = """
+									{"code":"VALIDATION_FAILED","message":"One field has an invalid value (see the fields map for details)","fields":{"username":"size must be between 4 and 64"}}
+									"""))),
+			@ApiResponse(responseCode = "409", description = "Duplicate username or email",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class),
+							examples = @ExampleObject(value = """
+									{"code":"DUPLICATE_EMAIL","message":"This email is already registered"}
+									""")))
+	})
 	public RegisterResponse register(@Valid @RequestBody RegisterRequest request) {
 		User user = userService.register(
 				request.username(),
@@ -49,6 +68,19 @@ public class AuthController {
 
 	@PostMapping("/login")
 	@Operation(summary = "Login", description = "Authenticates user credentials and returns a JWT access token.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "OK"),
+			@ApiResponse(responseCode = "400", description = "Validation failed",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class),
+							examples = @ExampleObject(value = """
+									{"code":"VALIDATION_FAILED","message":"One field has an invalid value (see the fields map for details)","fields":{"username":"must not be blank"}}
+									"""))),
+			@ApiResponse(responseCode = "401", description = "Invalid credentials",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class),
+							examples = @ExampleObject(value = """
+									{"code":"INVALID_CREDENTIALS","message":"Invalid username or password"}
+									""")))
+	})
 	public LoginResponse login(@Valid @RequestBody LoginRequest request) {
 		Authentication auth = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(request.username(), request.password()));
