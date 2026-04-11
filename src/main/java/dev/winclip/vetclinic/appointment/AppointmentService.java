@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -43,6 +44,14 @@ public class AppointmentService {
 	@Value("${vetclinic.clinic-timezone:UTC}")
 	private String clinicTimezone;
 
+	@Transactional(readOnly = true)
+	public List<AppointmentResponse> listMine(String username) {
+		User owner = requireUser(username);
+		return appointmentRepository.findAllForOwnerOrderByStartsAtDesc(owner.getId()).stream()
+				.map(AppointmentResponse::from)
+				.toList();
+	}
+
 	@Transactional
 	public AppointmentResponse create(String username, AppointmentCreateRequest request) {
 		User owner = requireUser(username);
@@ -50,12 +59,13 @@ public class AppointmentService {
 		Pet pet = requireMyActivePet(owner.getId(), request.petId());
 
 		Instant startsAt = request.startsAt();
+		ZoneId zone = ZoneId.of(clinicTimezone);
+		assertStartsOnHalfHourGrid(startsAt, zone);
 		if (startsAt.isBefore(Instant.now())) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Appointment start time must be in the future");
 		}
 
 		Instant endsAt = startsAt.plus(APPOINTMENT_LENGTH);
-		ZoneId zone = ZoneId.of(clinicTimezone);
 		assertFitsSingleCalendarDay(startsAt, endsAt, zone);
 		assertWithinWorkingHours(doctor.getId(), startsAt, endsAt, zone);
 
@@ -97,6 +107,19 @@ public class AppointmentService {
 		}
 		return petRepository.findByIdAndOwnerIdAndActiveTrue(petId, ownerId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, PET_NOT_FOUND));
+	}
+
+	private static void assertStartsOnHalfHourGrid(Instant startsAt, ZoneId zone) {
+		ZonedDateTime z = startsAt.atZone(zone);
+		if (z.getSecond() != 0 || z.getNano() != 0) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+					"Appointment start must be on a full or half hour (seconds must be zero)");
+		}
+		int minute = z.getMinute();
+		if (minute != 0 && minute != 30) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+					"Appointment start must be at :00 or :30 in the clinic timezone");
+		}
 	}
 
 	private static void assertFitsSingleCalendarDay(Instant startsAt, Instant endsAt, ZoneId zone) {

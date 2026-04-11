@@ -24,4 +24,13 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 			@Param("rangeEnd") Instant rangeEnd);
 
 	List<Appointment> findByPet_IdOrderByStartsAtDesc(Long petId);
+
+	@Query("""
+			select a from Appointment a
+				join fetch a.doctor
+				join fetch a.pet
+			where a.pet.owner.id = :ownerId
+			order by a.startsAt desc
+			""")
+	List<Appointment> findAllForOwnerOrderByStartsAtDesc(@Param("ownerId") Long ownerId);
 }
