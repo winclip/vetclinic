@@ -1,0 +1,132 @@
+package dev.winclip.vetclinic.appointment;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import dev.winclip.vetclinic.appointment.dto.AppointmentCreateRequest;
+import dev.winclip.vetclinic.appointment.dto.AppointmentResponse;
+import dev.winclip.vetclinic.doctor.Doctor;
+import dev.winclip.vetclinic.doctor.DoctorRepository;
+import dev.winclip.vetclinic.doctor.DoctorWorkingHours;
+import dev.winclip.vetclinic.doctor.DoctorWorkingHoursRepository;
+import dev.winclip.vetclinic.pet.Pet;
+import dev.winclip.vetclinic.pet.PetRepository;
+import dev.winclip.vetclinic.user.User;
+import dev.winclip.vetclinic.user.UserRepository;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class AppointmentService {
+
+	private static final Duration APPOINTMENT_LENGTH = Duration.ofMinutes(30);
+
+	private static final String USER_NOT_FOUND = "User not found";
+	private static final String DOCTOR_NOT_FOUND = "Doctor not found";
+	private static final String PET_NOT_FOUND = "Pet not found";
+
+	private final AppointmentRepository appointmentRepository;
+	private final DoctorRepository doctorRepository;
+	private final DoctorWorkingHoursRepository workingHoursRepository;
+	private final PetRepository petRepository;
+	private final UserRepository userRepository;
+
+	@Value("${vetclinic.clinic-timezone:UTC}")
+	private String clinicTimezone;
+
+	@Transactional
+	public AppointmentResponse create(String username, AppointmentCreateRequest request) {
+		User owner = requireUser(username);
+		Doctor doctor = requireActiveDoctor(request.doctorId());
+		Pet pet = requireMyActivePet(owner.getId(), request.petId());
+
+		Instant startsAt = request.startsAt();
+		if (startsAt.isBefore(Instant.now())) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Appointment start time must be in the future");
+		}
+
+		Instant endsAt = startsAt.plus(APPOINTMENT_LENGTH);
+		ZoneId zone = ZoneId.of(clinicTimezone);
+		assertFitsSingleCalendarDay(startsAt, endsAt, zone);
+		assertWithinWorkingHours(doctor.getId(), startsAt, endsAt, zone);
+
+		if (appointmentRepository.existsOverlapForDoctor(doctor.getId(), AppointmentStatus.SCHEDULED, startsAt, endsAt)) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "This time slot overlaps another appointment");
+		}
+
+		Appointment entity = new Appointment();
+		entity.setDoctor(doctor);
+		entity.setPet(pet);
+		entity.setStartsAt(startsAt);
+		entity.setEndsAt(endsAt);
+		entity.setStatus(AppointmentStatus.SCHEDULED);
+
+		Appointment saved = appointmentRepository.save(entity);
+		return AppointmentResponse.from(saved);
+	}
+
+	private User requireUser(String username) {
+		return userRepository.findByUsername(username)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
+	}
+
+	private Doctor requireActiveDoctor(Long doctorId) {
+		if (doctorId == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, DOCTOR_NOT_FOUND);
+		}
+		Doctor doctor = doctorRepository.findById(doctorId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DOCTOR_NOT_FOUND));
+		if (!doctor.isActive()) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, DOCTOR_NOT_FOUND);
+		}
+		return doctor;
+	}
+
+	private Pet requireMyActivePet(Long ownerId, Long petId) {
+		if (petId == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, PET_NOT_FOUND);
+		}
+		return petRepository.findByIdAndOwnerIdAndActiveTrue(petId, ownerId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, PET_NOT_FOUND));
+	}
+
+	private static void assertFitsSingleCalendarDay(Instant startsAt, Instant endsAt, ZoneId zone) {
+		ZonedDateTime zStart = startsAt.atZone(zone);
+		ZonedDateTime zEnd = endsAt.atZone(zone);
+		if (!zStart.toLocalDate().equals(zEnd.toLocalDate())) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+					"Appointment must fit within one calendar day in the clinic timezone");
+		}
+	}
+
+	private void assertWithinWorkingHours(Long doctorId, Instant startsAt, Instant endsAt, ZoneId zone) {
+		ZonedDateTime zStart = startsAt.atZone(zone);
+		int dayOfWeek = zStart.getDayOfWeek().getValue();
+		LocalTime tStart = zStart.toLocalTime();
+		LocalTime tEnd = endsAt.atZone(zone).toLocalTime();
+
+		boolean anyRow = false;
+		for (DoctorWorkingHours row : workingHoursRepository.findByDoctorIdOrderByDayOfWeekAscStartTimeAsc(doctorId)) {
+			if (row.getDayOfWeek() != dayOfWeek) {
+				continue;
+			}
+			anyRow = true;
+			if (!tStart.isBefore(row.getStartTime()) && !tEnd.isAfter(row.getEndTime())) {
+				return;
+			}
+		}
+		if (!anyRow) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Doctor has no working hours for this day");
+		}
+		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Outside doctor working hours");
+	}
+}
