@@ -1,7 +1,10 @@
 package dev.winclip.vetclinic.doctor;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -47,6 +50,7 @@ public class DoctorController {
 
 	private final DoctorService doctorService;
 	private final DoctorWorkingHoursService doctorWorkingHoursService;
+	private final DoctorAvailabilityService doctorAvailabilityService;
 
 	@GetMapping
 	@Operation(summary = "List doctors", description = "Returns a paged list of active doctors.")
@@ -89,6 +93,22 @@ public class DoctorController {
 	})
 	public List<DoctorWorkingHoursResponse> getWorkingHours(@PathVariable Long id) {
 		return doctorWorkingHoursService.getWorkingHours(id);
+	}
+
+	@GetMapping("/{id}/available-slots")
+	@Operation(summary = "Available slots", description = "30-minute starts on the given calendar day (clinic timezone) from working hours minus SCHEDULED appointments; past times omitted for today.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "OK — ISO-8601 instants (UTC)"),
+			@ApiResponse(responseCode = "400", description = "Invalid date",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "404", description = "Doctor not found",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+	})
+	public List<Instant> getAvailableSlots(
+			@PathVariable Long id,
+			@Parameter(description = "Calendar day in clinic timezone", example = "2026-04-15")
+			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+		return doctorAvailabilityService.getAvailableSlots(id, date);
 	}
 
 	@PutMapping("/{id}/working-hours")
