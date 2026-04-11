@@ -1,5 +1,7 @@
 package dev.winclip.vetclinic.doctor;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +22,9 @@ import dev.winclip.vetclinic.api.PagedResponse;
 import dev.winclip.vetclinic.error.ErrorResponse;
 import dev.winclip.vetclinic.doctor.dto.DoctorCreateRequest;
 import dev.winclip.vetclinic.doctor.dto.DoctorResponse;
+import dev.winclip.vetclinic.doctor.dto.DoctorWorkingHoursReplaceRequest;
+import dev.winclip.vetclinic.doctor.dto.DoctorWorkingHoursResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -41,6 +46,7 @@ public class DoctorController {
 	private static final int MAX_SIZE = 100;
 
 	private final DoctorService doctorService;
+	private final DoctorWorkingHoursService doctorWorkingHoursService;
 
 	@GetMapping
 	@Operation(summary = "List doctors", description = "Returns a paged list of active doctors.")
@@ -72,6 +78,36 @@ public class DoctorController {
 	})
 	public DoctorResponse getById(@PathVariable Long id) {
 		return doctorService.getById(id);
+	}
+
+	@GetMapping("/{id}/working-hours")
+	@Operation(summary = "Get doctor working hours", description = "Weekly template (ISO day 1=Monday … 7=Sunday).")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "OK"),
+			@ApiResponse(responseCode = "404", description = "Doctor not found",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+	})
+	public List<DoctorWorkingHoursResponse> getWorkingHours(@PathVariable Long id) {
+		return doctorWorkingHoursService.getWorkingHours(id);
+	}
+
+	@PutMapping("/{id}/working-hours")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "Replace doctor working hours", description = "Replaces the weekly schedule (ADMIN only). Send {\"intervals\":[]} to clear.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "204", description = "Replaced"),
+			@ApiResponse(responseCode = "400", description = "Invalid intervals or overlap",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "401", description = "Missing or invalid JWT",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "403", description = "Forbidden (ADMIN only)",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "404", description = "Doctor not found",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+	})
+	public void replaceWorkingHours(@PathVariable Long id, @Valid @RequestBody DoctorWorkingHoursReplaceRequest body) {
+		doctorWorkingHoursService.replaceWorkingHours(id, body.intervals());
 	}
 
 	@PostMapping
