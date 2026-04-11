@@ -35,6 +35,19 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 			""")
 	Optional<Appointment> findWithPetOwnerAndDoctorById(@Param("id") Long id);
 
+	@Query("""
+			select a from Appointment a
+			where a.doctor.id = :doctorId
+				and a.status = :status
+				and a.startsAt < :rangeEnd
+				and a.endsAt > :rangeStart
+			""")
+	List<Appointment> findForDoctorStatusOverlappingRange(
+			@Param("doctorId") Long doctorId,
+			@Param("status") AppointmentStatus status,
+			@Param("rangeStart") Instant rangeStart,
+			@Param("rangeEnd") Instant rangeEnd);
+
 	List<Appointment> findByPet_IdOrderByStartsAtDesc(Long petId);
 
 	@Query("""
