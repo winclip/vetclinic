@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import dev.winclip.vetclinic.appointment.dto.AppointmentCreateRequest;
+import dev.winclip.vetclinic.appointment.dto.AppointmentRescheduleRequest;
 import dev.winclip.vetclinic.appointment.dto.AppointmentResponse;
 import dev.winclip.vetclinic.error.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -63,5 +66,48 @@ public class AppointmentController {
 			@AuthenticationPrincipal String username,
 			@Valid @RequestBody AppointmentCreateRequest request) {
 		return appointmentService.create(username, request);
+	}
+
+	@PostMapping("/{id}/cancel")
+	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "Cancel appointment", description = "Sets status to CANCELLED. Pet owner or ADMIN.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "OK"),
+			@ApiResponse(responseCode = "400", description = "Not scheduled",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "401", description = "Missing or invalid JWT",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "403", description = "Forbidden",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "404", description = "Not found",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+	})
+	public AppointmentResponse cancel(
+			@AuthenticationPrincipal String username,
+			@PathVariable Long id) {
+		return appointmentService.cancel(username, id);
+	}
+
+	@PatchMapping("/{id}")
+	@SecurityRequirement(name = "bearerAuth")
+	@Operation(summary = "Reschedule appointment", description = "New startsAt (:00/:30 in clinic TZ). Pet owner or ADMIN.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "OK"),
+			@ApiResponse(responseCode = "400", description = "Invalid time or not scheduled",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "401", description = "Missing or invalid JWT",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "403", description = "Forbidden",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "404", description = "Not found",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "409", description = "Slot overlap",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+	})
+	public AppointmentResponse reschedule(
+			@AuthenticationPrincipal String username,
+			@PathVariable Long id,
+			@Valid @RequestBody AppointmentRescheduleRequest request) {
+		return appointmentService.reschedule(username, id, request);
 	}
 }
