@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 import dev.winclip.vetclinic.appointment.Appointment;
 import dev.winclip.vetclinic.appointment.AppointmentRepository;
 import dev.winclip.vetclinic.appointment.AppointmentStatus;
+import dev.winclip.vetclinic.doctor.dto.AvailableSlotsDayResponse;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -82,6 +83,28 @@ public class DoctorAvailabilityService {
 				continue;
 			}
 			result.add(slotStart);
+		}
+		return result;
+	}
+
+	@Transactional(readOnly = true)
+	public List<AvailableSlotsDayResponse> getAvailableSlotsForDateRange(Long doctorId, LocalDate from, int days) {
+		if (from == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "from is required");
+		}
+		if (days < 1 || days > 14) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "days must be between 1 and 14");
+		}
+		ZoneId zone = ZoneId.of(clinicTimezone);
+		LocalDate today = LocalDate.now(zone);
+		if (from.isBefore(today)) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "from must be today or in the future");
+		}
+
+		List<AvailableSlotsDayResponse> result = new ArrayList<>();
+		for (int i = 0; i < days; i++) {
+			LocalDate d = from.plusDays(i);
+			result.add(new AvailableSlotsDayResponse(d, getAvailableSlots(doctorId, d)));
 		}
 		return result;
 	}

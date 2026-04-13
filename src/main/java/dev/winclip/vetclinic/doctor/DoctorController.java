@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import dev.winclip.vetclinic.api.PagedResponse;
 import dev.winclip.vetclinic.error.ErrorResponse;
+import dev.winclip.vetclinic.doctor.dto.AvailableSlotsDayResponse;
 import dev.winclip.vetclinic.doctor.dto.DoctorCreateRequest;
 import dev.winclip.vetclinic.doctor.dto.DoctorResponse;
 import dev.winclip.vetclinic.doctor.dto.DoctorWorkingHoursReplaceRequest;
@@ -37,6 +38,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -109,6 +112,24 @@ public class DoctorController {
 			@Parameter(description = "Calendar day in clinic timezone", example = "2026-04-15")
 			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 		return doctorAvailabilityService.getAvailableSlots(id, date);
+	}
+
+	@GetMapping("/{id}/available-slots/week")
+	@Operation(summary = "Available slots for several days", description = "One entry per day: same 30-minute slot rules as single-day endpoint; days capped at 14 (inclusive).")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "OK"),
+			@ApiResponse(responseCode = "400", description = "Invalid from or days",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+			@ApiResponse(responseCode = "404", description = "Doctor not found",
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+	})
+	public List<AvailableSlotsDayResponse> getAvailableSlotsWeek(
+			@PathVariable Long id,
+			@Parameter(description = "First calendar day (clinic timezone)", example = "2026-04-15")
+			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+			@Parameter(description = "Number of consecutive days (1-14)", example = "7")
+			@RequestParam(defaultValue = "7") @Min(1) @Max(14) int days) {
+		return doctorAvailabilityService.getAvailableSlotsForDateRange(id, from, days);
 	}
 
 	@PutMapping("/{id}/working-hours")
