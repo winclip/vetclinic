@@ -32,6 +32,7 @@ import dev.winclip.vetclinic.doctor.dto.DoctorWorkingHoursResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -117,7 +118,25 @@ public class DoctorController {
 	@GetMapping("/{id}/available-slots/week")
 	@Operation(summary = "Available slots for several days", description = "One entry per day: same 30-minute slot rules as single-day endpoint; days capped at 14 (inclusive).")
 	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "OK"),
+			@ApiResponse(responseCode = "200", description = "OK",
+					content = @Content(mediaType = "application/json",
+							schema = @Schema(implementation = AvailableSlotsDayResponse.class),
+							examples = @ExampleObject(name = "weekSlots", value = """
+									[
+									  {
+									    "date": "2026-04-15",
+									    "slots": [
+									      "2026-04-15T09:00:00Z",
+									      "2026-04-15T09:30:00Z",
+									      "2026-04-15T10:00:00Z"
+									    ]
+									  },
+									  {
+									    "date": "2026-04-16",
+									    "slots": []
+									  }
+									]
+									"""))),
 			@ApiResponse(responseCode = "400", description = "Invalid from or days",
 					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
 			@ApiResponse(responseCode = "404", description = "Doctor not found",
