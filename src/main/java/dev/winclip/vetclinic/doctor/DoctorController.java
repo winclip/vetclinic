@@ -27,7 +27,7 @@ import dev.winclip.vetclinic.doctor.dto.AvailableSlotsDayResponse;
 import dev.winclip.vetclinic.doctor.dto.DoctorCreateRequest;
 import dev.winclip.vetclinic.doctor.dto.DoctorResponse;
 import dev.winclip.vetclinic.doctor.dto.DoctorWorkingHoursReplaceRequest;
-import dev.winclip.vetclinic.doctor.dto.DoctorWorkingHoursResponse;
+import dev.winclip.vetclinic.doctor.dto.DoctorWorkingHoursWeekScheduleResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -89,14 +89,14 @@ public class DoctorController {
 	}
 
 	@GetMapping("/{id}/working-hours")
-	@Operation(summary = "Get doctor working hours", description = "Weekly template (ISO day 1=Monday … 7=Sunday).")
+	@Operation(summary = "Get doctor working hours", description = "Weekly schedule: MON…SUN keys, each a list of {from,to} intervals (ISO times). Empty lists on days off.")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", description = "OK"),
 			@ApiResponse(responseCode = "404", description = "Doctor not found",
 					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
 	})
-	public List<DoctorWorkingHoursResponse> getWorkingHours(@PathVariable Long id) {
-		return doctorWorkingHoursService.getWorkingHours(id);
+	public DoctorWorkingHoursWeekScheduleResponse getWorkingHours(@PathVariable Long id) {
+		return DoctorWorkingHoursWeekScheduleResponse.fromFlat(doctorWorkingHoursService.getWorkingHours(id));
 	}
 
 	@GetMapping("/{id}/available-slots")
