@@ -6,6 +6,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import dev.winclip.vetclinic.doctor.dto.DoctorWorkingHoursReplaceRequest;
 import dev.winclip.vetclinic.doctor.dto.DoctorWorkingHoursUiInterval;
 import dev.winclip.vetclinic.doctor.dto.DoctorWorkingHoursWeekScheduleResponse;
 import dev.winclip.vetclinic.doctor.dto.WeekdayCode;
+import dev.winclip.vetclinic.error.ErrorResponse;
 import dev.winclip.vetclinic.support.AbstractIntegrationTest;
 
 class DoctorWorkingHoursIntegrationTest extends AbstractIntegrationTest {
@@ -99,5 +101,22 @@ class DoctorWorkingHoursIntegrationTest extends AbstractIntegrationTest {
 					.as("schedule for %s", day)
 					.containsExactlyElementsOf(expectedWorkingDay);
 		}
+	}
+
+	@Test
+	void putWorkingHoursWithoutTokenReturnsUnauthorized() {
+		DoctorWorkingHoursReplaceRequest body = new DoctorWorkingHoursReplaceRequest(List.of(
+				new DoctorWorkingHoursItemRequest(2, MORNING_FROM, MORNING_TO)));
+
+		ResponseEntity<ErrorResponse> response = http.exchange(
+				"/api/doctors/1/working-hours",
+				HttpMethod.PUT,
+				new HttpEntity<>(body),
+				ErrorResponse.class);
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+		assertThat(response.getBody()).isNotNull();
+		assertThat(response.getBody().code()).isEqualTo("UNAUTHORIZED");
+		assertThat(response.getBody().message()).isNotBlank();
 	}
 }
