@@ -1,10 +1,20 @@
 spring:
-  datasource:
-    url: ${TEST_DB_URL:jdbc:postgresql://localhost:5432/vetclinic_test}
-    username: ${TEST_DB_USER:postgres}
-    password: ${TEST_DB_PASSWORD}
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
   flyway:
     enabled: true
+    locations: classpath:db/migration
+
+vetclinic:
+  jwt:
+    secret: test-only-secret-min-32-bytes!!!!
+    expiration: PT1H
+  clinic-timezone: UTC
+  bootstrap:
+    enabled: false
