@@ -41,13 +41,21 @@ public abstract class AbstractIntegrationTest {
 	protected PasswordEncoder passwordEncoder;
 
 	protected String createAdmin(String username, String rawPassword) {
-		User admin = new User();
-		admin.setUsername(username);
-		admin.setEmail(username + "@continental.example");
-		admin.setFullName(username);
-		admin.setPasswordHash(passwordEncoder.encode(rawPassword));
-		admin.setRole(UserRole.ADMIN);
-		users.save(admin);
+		return createUserWithRole(username, rawPassword, UserRole.ADMIN);
+	}
+
+	protected String createUser(String username, String rawPassword) {
+		return createUserWithRole(username, rawPassword, UserRole.USER);
+	}
+
+	private String createUserWithRole(String username, String rawPassword, UserRole role) {
+		User user = new User();
+		user.setUsername(username);
+		user.setEmail(username + "@continental.example");
+		user.setFullName(username);
+		user.setPasswordHash(passwordEncoder.encode(rawPassword));
+		user.setRole(role);
+		users.save(user);
 		return loginAndGetBearer(username, rawPassword);
 	}
 

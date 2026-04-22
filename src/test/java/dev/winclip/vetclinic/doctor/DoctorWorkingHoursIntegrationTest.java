@@ -119,4 +119,24 @@ class DoctorWorkingHoursIntegrationTest extends AbstractIntegrationTest {
 		assertThat(response.getBody().code()).isEqualTo("UNAUTHORIZED");
 		assertThat(response.getBody().message()).isNotBlank();
 	}
+
+	@Test
+	void putWorkingHoursAsRegularUserReturnsForbidden() {
+		String bearer = createUser("santino_dantonio", "marker-debt-1");
+
+		DoctorWorkingHoursReplaceRequest body = new DoctorWorkingHoursReplaceRequest(List.of(
+				new DoctorWorkingHoursItemRequest(2, MORNING_FROM, MORNING_TO)));
+
+		ResponseEntity<ErrorResponse> response = exchange(
+				HttpMethod.PUT,
+				"/api/doctors/1/working-hours",
+				bearer,
+				body,
+				ErrorResponse.class);
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+		assertThat(response.getBody()).isNotNull();
+		assertThat(response.getBody().code()).isEqualTo("FORBIDDEN");
+		assertThat(response.getBody().message()).isNotBlank();
+	}
 }
